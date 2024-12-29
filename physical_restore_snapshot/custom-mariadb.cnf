@@ -1,0 +1,45 @@
+[mysqld]
+
+# Reduce Connection Limit
+max_connections=10
+thread_stack=256K
+
+# Minimal Buffer Pool Settings
+innodb_file_per_table=1
+innodb_buffer_pool_size=16M
+innodb_log_buffer_size=2M
+innodb_log_file_size=16M
+innodb_read_ahead_threshold=0
+innodb_read_io_threads=1
+innodb_write_io_threads=2
+innodb_purge_threads=1
+innodb_flush_method=O_DIRECT
+innodb_flush_log_at_trx_commit=2
+
+# Disable all caching
+table_open_cache=32
+table_definition_cache=400
+thread_cache_size=0
+
+# Minimal memory settings
+key_buffer_size=1M
+tmp_table_size=1M
+max_heap_table_size=1M
+join_buffer_size=128K
+sort_buffer_size=128K
+read_buffer_size=64K
+read_rnd_buffer_size=64K
+
+# Disable query cache
+query_cache_size=0
+query_cache_type=0
+
+# Disable Performance Schema
+performance_schema=OFF
+
+# Force loading data only when needed
+innodb_read_ahead_threshold=0
+
+# Disable additional features
+innodb_adaptive_hash_index=0
+innodb_stats_on_metadata=0
