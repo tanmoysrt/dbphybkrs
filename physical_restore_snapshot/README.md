@@ -50,3 +50,15 @@ Steps -
 12. Done !
 
 
+
+/target_db
+/var/lib/mysql
+
+env variables
+BACKUP_DB=
+TARGET_DB=
+
+TARGET_DB_ROOT_PASSWORD
+BACKUP_DB_ROOT_PASSWORD
+TARGET_DB_PORT=3306
+TARGET_DB_HOST=localhost

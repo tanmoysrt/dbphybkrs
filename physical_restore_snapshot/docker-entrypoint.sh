@@ -52,6 +52,37 @@ _main() {
         set -- mariadbd "$@"
     fi
 
+    # raise error if /target_db not exists
+    if [ ! -d /target_db ]; then
+        mysql_error "Directory /target_db does not exist. Please mount the target_db volume."
+    fi
+
+    # check for MYSQL_UID and MYSQL_GID environment variables
+    if [ -z "${MYSQL_UID}" ] || [ -z "${MYSQL_GID}" ]; then
+        mysql_error "MYSQL_UID and MYSQL_GID environment variables must be set."
+    fi
+
+    # check for BACKUP_DB environment variable
+    if [ -z "${BACKUP_DB}" ]; then
+        mysql_error "BACKUP_DB environment variable must be set."
+    fi
+    # check for TARGET_DB environment variable
+    if [ -z "${TARGET_DB}" ]; then
+        mysql_error "TARGET_DB environment variable must be set."
+    fi
+    # check for TARGET_DB_ROOT_PASSWORD environment variable
+    if [ -z "${TARGET_DB_ROOT_PASSWORD}" ]; then
+        mysql_error "TARGET_DB_ROOT_PASSWORD environment variable must be set."
+    fi
+    # check for BACKUP_DB_ROOT_PASSWORD environment variable
+    if [ -z "${BACKUP_DB_ROOT_PASSWORD}" ]; then
+        mysql_error "BACKUP_DB_ROOT_PASSWORD environment variable must be set."
+    fi
+
+    # Set the UID and GID for the mysql user
+    groupmod -g ${MYSQL_GID} mysql
+    usermod -u ${MYSQL_UID} -g ${MYSQL_GID}  mysql
+
     # Only process if running mariadbd/mysqld
     if [ "$1" = 'mariadbd' ] || [ "$1" = 'mysqld' ]; then
         mysql_note "Entrypoint script for MariaDB Server started."
@@ -76,9 +107,8 @@ _main() {
         done
         mysql_note "MySQL is ready."
 
-		# Execute the command
-		# mysql_note "Opening Shell"
-		# exec /bin/bash
+		# Execute the restore script
+        python3 /restore.py
 
 		# Try to stop mariadbd
 		mysql_note "Stopping MySQL"
