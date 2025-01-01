@@ -64,7 +64,7 @@
 ---
 
 For local testing, grant root access from any host -
-
+```sql
 ALTER USER 'root'@'localhost' IDENTIFIED BY 'toor';
 ALTER USER 'root'@'%' IDENTIFIED BY 'toor';
 ALTER USER 'root'@'::1' IDENTIFIED BY 'toor';
@@ -74,3 +74,4 @@ GRANT ALL PRIVILEGES ON _._ TO 'root'@'%' IDENTIFIED BY 'toor' WITH GRANT OPTION
 GRANT ALL PRIVILEGES ON _._ TO 'root'@'::1' IDENTIFIED BY 'toor' WITH GRANT OPTION;
 GRANT ALL PRIVILEGES ON _._ TO 'root'@'127.0.0.1' IDENTIFIED BY 'toor' WITH GRANT OPTION;
 FLUSH PRIVILEGES;
+```
