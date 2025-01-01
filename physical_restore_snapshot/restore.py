@@ -149,7 +149,7 @@ class DatabaseImporter:
             self.db_schema,
         )
         # create the tables
-        sql_stmts = schema_file_content.split(";")
+        sql_stmts = schema_file_content.split(";\n")
         for sql_stmt in sql_stmts:
             if sql_stmt.strip():
                 self.get_target_db().execute_sql(sql_stmt)
