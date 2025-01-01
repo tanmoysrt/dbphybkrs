@@ -27,6 +27,7 @@
   - Has it's root user password
 - Volume holding backup
   - /mnt/backup1
+- Password of backup database
 - Backup database name
 - Target database name
 
