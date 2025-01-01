@@ -1,9 +1,5 @@
 FROM mariadb:10.11.8
 
-# Set some default environment variables
-ENV TARGET_DB_PORT=3306
-ENV TARGET_DB_HOST=localhost
-
 # Install python
 RUN apt-get update && apt-get install -y python3 python3-pip python-is-python3
 

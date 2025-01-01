@@ -43,7 +43,8 @@ class DatabaseImporter:
         backup_db: str,
         backup_db_root_password: str,
         target_db_root_password: str,
-        target_db_port: int = 3306,
+        target_db_port: int,
+        target_db_host: str,
     ):
         self._target_db_instance: peewee.MySQLDatabase = None
         self._backup_db_instance: peewee.MySQLDatabase = None
@@ -51,7 +52,7 @@ class DatabaseImporter:
         self.target_db = target_db
         self.target_db_user = "root"
         self.target_db_password = target_db_root_password
-        self.target_db_host = "host.docker.internal"
+        self.target_db_host = target_db_host
         self.target_db_port = target_db_port
         self.target_db_directory = os.path.join("/target_db")
 
@@ -231,10 +232,11 @@ class DatabaseImporter:
 
 if __name__ == "__main__":
     importer = DatabaseImporter(
-        target_db="target_db",
-        backup_db="backup_db",
-        backup_db_root_password="backup_db_root_password",
-        target_db_root_password="target_db_root_password",
-        target_db_port=3306,
+        target_db=os.environ.get("TARGET_DB"),
+        backup_db=os.environ.get("BACKUP_DB"),
+        backup_db_root_password=os.environ.get("BACKUP_DB_ROOT_PASSWORD"),
+        target_db_root_password=os.environ.get("TARGET_DB_ROOT_PASSWORD"),
+        target_db_port=int(os.environ.get("TARGET_DB_PORT", 3306)),
+        target_db_host=os.environ.get("TARGET_DB_HOST", "host.docker.internal"),
     )
     importer.process()
