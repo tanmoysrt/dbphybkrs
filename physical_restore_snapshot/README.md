@@ -1,41 +1,53 @@
-mysql_upgrade_info > contains mariadb version
+**Actual Steps**
 
+1. Create a dummy database on target server `create database abc_demo`
+2. Run the container
 
-docker run --rm -it --add-host=host.docker.internal:host-gateway ubuntu
-curl http://host.docker.internal
+```bash
+   sudo docker run --rm -it \
+    --add-host=host.docker.internal:host-gateway \
+    -v /home/tanmoy/Desktop/physical-backup/phy2:/var/lib/mysql \
+    -v /var/lib/mysql/abc_demo/:/target_db \
+    -e BACKUP_DB="employees" \
+    -e TARGET_DB="abc_demo" \
+    -e TARGET_DB_ROOT_PASSWORD="toor" \
+    -e BACKUP_DB_ROOT_PASSWORD="toor" \
+    -e TARGET_DB_HOST="host.docker.internal" \
+    -e TARGET_DB_PORT=3306 \
+    -e MYSQL_UID=127 \
+    -e MYSQL_GID=135 \
+    db_restore
+```
 
-------
+**What we have:**
 
-What we have:
 - Local MariaDB
-    - Running at :3306
-    - Has data directory on /var/lib/mysql
-    - Has it's root user password
+  - Running at :3306
+  - Has data directory on /var/lib/mysql
+  - Has it's root user password
 - Volume holding backup
-    - /mnt/backup1
+  - /mnt/backup1
 - Backup database name
 - Target database name
-- Container
-    - will know the password of root user
-    - can access network namespace of host
-    - have it's own network namespace
-    - user is root also
 
-Container will get what ?
+**Container will get what ?**
+
 - Volumes
-    - /mnt/backup1:/var/lib/mysql > dummy mysql server
-    - /var/lib/mysql/_database_directory:/db > older, where we need to put the ibd and cfg files
+  - /mnt/backup1:/var/lib/mysql > dummy mysql server
+  - /var/lib/mysql/\_database_directory:/db > older, where we need to put the ibd and cfg files
 - UID and GID of mysql
 - Backup Database Name
 - Target Database Name
 
-Assumptions -
+**Assumptions -**
+
 - Non partitioned table
 - Don't reuse the mounted backup volume
 
 > Just start the container, it will do it's job and exit
 
-Steps -
+**Steps -**
+
 1. Change uid/gid of mysql user
 2. Start the local mysql server in background (keep pid handy to give a graceful shutdown)
 3. Wait for connection on localhost:3306 port
@@ -49,16 +61,16 @@ Steps -
 11. `Import Tablespace` on real server
 12. Done !
 
+---
 
+For local testing, grant root access from any host -
 
-/target_db
-/var/lib/mysql
-
-env variables
-BACKUP_DB=
-TARGET_DB=
-
-TARGET_DB_ROOT_PASSWORD
-BACKUP_DB_ROOT_PASSWORD
-TARGET_DB_PORT=3306
-TARGET_DB_HOST=localhost
+ALTER USER 'root'@'localhost' IDENTIFIED BY 'toor';
+ALTER USER 'root'@'%' IDENTIFIED BY 'toor';
+ALTER USER 'root'@'::1' IDENTIFIED BY 'toor';
+ALTER USER 'root'@'127.0.0.1' IDENTIFIED BY 'toor';
+GRANT ALL PRIVILEGES ON _._ TO 'root'@'localhost' IDENTIFIED BY 'toor' WITH GRANT OPTION;
+GRANT ALL PRIVILEGES ON _._ TO 'root'@'%' IDENTIFIED BY 'toor' WITH GRANT OPTION;
+GRANT ALL PRIVILEGES ON _._ TO 'root'@'::1' IDENTIFIED BY 'toor' WITH GRANT OPTION;
+GRANT ALL PRIVILEGES ON _._ TO 'root'@'127.0.0.1' IDENTIFIED BY 'toor' WITH GRANT OPTION;
+FLUSH PRIVILEGES;
