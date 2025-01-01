@@ -67,7 +67,11 @@ class DatabaseImporter:
         self.tables: list[str] = []
 
     def process(self):
-        print("Starting the process")
+        self.get_backup_db()
+        print("Validated connection with backup db")
+        self.get_target_db()
+        print("Validated connection with target db")
+        print("-- Starting the process --")
         self._prepare_backup_db()
         print("Prepared backup db")
         # https://mariadb.com/kb/en/innodb-file-per-table-tablespaces/#importing-transportable-tablespaces-for-non-partitioned-tables
@@ -126,7 +130,7 @@ class DatabaseImporter:
         )  # re-enable foreign key checks
 
         # check if there are any *.ibd files in the db_directory
-        files_in_db_directory = os.listdir(self.db_directory)
+        files_in_db_directory = os.listdir(self.target_db_directory)
         if any([file.endswith(".ibd") for file in files_in_db_directory]):
             raise Exception("Database directory still contains *.ibd files.")
 
@@ -195,6 +199,7 @@ class DatabaseImporter:
                 raise ConnectionClosedWithDatabase()
             return self._backup_db_instance
 
+        print("Creating backup db instance")
         self._backup_db_instance = peewee.MySQLDatabase(
             self.backup_db,
             user=self.backup_db_user,

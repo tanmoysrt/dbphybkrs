@@ -57,6 +57,11 @@ _main() {
         mysql_error "Directory /target_db does not exist. Please mount the target_db volume."
     fi
 
+    # raise error if /var/lib/mysql not exists
+    if [ ! -d /var/lib/mysql ]; then
+        mysql_error "Directory /var/lib/mysql does not exist. Please mount the mysql volume."
+    fi
+
     # check for MYSQL_UID and MYSQL_GID environment variables
     if [ -z "${MYSQL_UID}" ] || [ -z "${MYSQL_GID}" ]; then
         mysql_error "MYSQL_UID and MYSQL_GID environment variables must be set."
@@ -109,6 +114,7 @@ _main() {
 
 		# Execute the restore script
         python3 /restore.py
+        # sleep infinity
 
 		# Try to stop mariadbd
 		mysql_note "Stopping MySQL"
@@ -121,10 +127,10 @@ _main() {
 			sleep 1
 		done
 		mysql_note "MySQL has stopped."
+    else
+        mysql_note "Running command: $@"
+        exec "$@"
     fi
-
-    # If not running mariadbd, just execute the command
-    exec "$@"
 }
 
 _main "$@"

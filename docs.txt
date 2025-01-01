@@ -1,0 +1,28 @@
+1. Create a dummy database on target server `create database abc_demo`
+2. Run the container
+sudo docker run --rm -it \
+    --add-host=host.docker.internal:host-gateway \
+    -v /home/tanmoy/Desktop/physical-backup/phy2:/var/lib/mysql \
+    -v /var/lib/mysql/abc_demo/:/target_db \
+    -e BACKUP_DB="employees" \
+    -e TARGET_DB="abc_demo" \
+    -e TARGET_DB_ROOT_PASSWORD="toor" \
+    -e BACKUP_DB_ROOT_PASSWORD="toor" \
+    -e TARGET_DB_HOST="host.docker.internal" \
+    -e TARGET_DB_PORT=3306 \
+    -e MYSQL_UID=127 \
+    -e MYSQL_GID=135 \
+    db_restore
+
+------------------
+For local testing, grant root access from any host -
+
+ALTER USER 'root'@'localhost' IDENTIFIED BY 'toor';
+ALTER USER 'root'@'%' IDENTIFIED BY 'toor';
+ALTER USER 'root'@'::1' IDENTIFIED BY 'toor';
+ALTER USER 'root'@'127.0.0.1' IDENTIFIED BY 'toor';
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' IDENTIFIED BY 'toor' WITH GRANT OPTION;
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY 'toor' WITH GRANT OPTION;
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'::1' IDENTIFIED BY 'toor' WITH GRANT OPTION;
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'127.0.0.1' IDENTIFIED BY 'toor' WITH GRANT OPTION;
+FLUSH PRIVILEGES;
