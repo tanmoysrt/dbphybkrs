@@ -27,6 +27,7 @@ class DatabaseImporter:
         target_db_base_directory: str = "/var/lib/mysql",
     ):
         self._target_db_instance: peewee.MySQLDatabase = None
+        self._target_db_instance_for_myisam: peewee.MySQLDatabase = None
         self.target_db = target_db
         self.target_db_user = "root"
         self.target_db_password = target_db_root_password
@@ -118,16 +119,22 @@ class DatabaseImporter:
         Discard tablespace query on innodb already took care of locks
         """
         tables = ["`{}` WRITE".format(table) for table in self.myisam_tables]
-        self.get_target_db().execute_sql("LOCK TABLES {};".format(", ".join(tables)))
+        self.get_target_db_for_myisam().execute_sql(
+            "LOCK TABLES {};".format(", ".join(tables))
+        )
 
     def _perform_file_operations(self, engine: str):
         for file in os.listdir(self.backup_db_directory):
             # copy only .ibd, .cfg if innodb
-            if engine == "innodb" and not (file.endswith(".ibd") or file.endswith(".cfg")):
+            if engine == "innodb" and not (
+                file.endswith(".ibd") or file.endswith(".cfg")
+            ):
                 continue
 
             # copy one .MYI, .MYD files if myisam
-            if engine == "myisam" and not (file.endswith(".MYI") or file.endswith(".MYD")):
+            if engine == "myisam" and not (
+                file.endswith(".MYI") or file.endswith(".MYD")
+            ):
                 continue
 
             shutil.copy(
@@ -166,12 +173,36 @@ class DatabaseImporter:
         self._target_db_instance.execute_sql("SET SESSION wait_timeout = 14400;")
         return self._target_db_instance
 
+    def get_target_db_for_myisam(self) -> peewee.MySQLDatabase:
+        if self._target_db_instance_for_myisam is not None:
+            if not self._target_db_instance_for_myisam.is_connection_usable():
+                raise ConnectionClosedWithDatabase()
+            return self._target_db_instance_for_myisam
+
+        self._target_db_instance_for_myisam = peewee.MySQLDatabase(
+            self.target_db,
+            user=self.target_db_user,
+            password=self.target_db_password,
+            host=self.target_db_host,
+            port=self.target_db_port,
+            autocommit=False,
+        )
+        self._target_db_instance_for_myisam.connect()
+        # Set session wait timeout to 4 hours [EXPERIMENTAL]
+        self._target_db_instance_for_myisam.execute_sql(
+            "SET SESSION wait_timeout = 14400;"
+        )
+        return self._target_db_instance_for_myisam
+
     def unlock_all_tables(self):
         self.get_target_db().execute_sql("UNLOCK TABLES;")
+        self.get_target_db_for_myisam().execute_sql("UNLOCK TABLES;")
 
     def __del__(self):
         if self._target_db_instance is not None:
             self._target_db_instance.close()
+        if self._target_db_instance_for_myisam is not None:
+            self._target_db_instance_for_myisam.close()
 
 
 if __name__ == "__main__":
