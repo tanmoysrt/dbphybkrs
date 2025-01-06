@@ -1,6 +1,7 @@
 import peewee
 import os
 import subprocess
+import json
 
 
 class DatabaseSchemaExportError(Exception):
@@ -63,7 +64,7 @@ class DatabaseExporter:
         Need to be sent to press. Important to restore the database later.
         """
         with open("snapshot.json", "w") as f:
-            f.write(str(data))
+            f.write(json.dumps(data))
 
         print("After taking snapshot press enter to continue")
         input()  # Wait for user to take snapshot
