@@ -2,6 +2,7 @@ import shutil
 import peewee
 import os
 import re
+import subprocess
 
 
 class ConnectionClosedWithDatabase(Exception):
@@ -46,6 +47,8 @@ class DatabaseImporter:
         self.get_target_db()
         print("Validated connection with target db")
         print("-- Starting the process --")
+        self._check_and_fix_myisam_table_files()
+        print("Checked and fixed MyISAM table files")
         # https://mariadb.com/kb/en/innodb-file-per-table-tablespaces/#importing-transportable-tablespaces-for-non-partitioned-tables
         self._prepare_target_db_for_restore()
         print("Prepared target db")
@@ -153,6 +156,36 @@ class DatabaseImporter:
             self.get_target_db().execute_sql(
                 "ALTER TABLE {} IMPORT TABLESPACE;".format(table)
             )
+
+    def _check_and_fix_myisam_table_files(self):
+        """
+        Check issues in MyISAM table files
+        myisamchk :path
+
+        If any issues found, try to repair the table
+        """
+        files = os.listdir(self.target_db_directory)
+        files = [file for file in files if file.endswith(".MYI")]
+        for file in files:
+            myisamchk_command = [
+                "myisamchk",
+                os.path.join(self.target_db_directory, file),
+            ]
+            try:
+                subprocess.check_output(myisamchk_command)
+                print("Checked MyISAM table file: {}".format(file))
+            except subprocess.CalledProcessError as e:
+                print("Error while checking MyISAM table file: {}".format(e.output))
+                print("Trying to repair the table")
+                myisamchk_command.append("--recover")
+                try:
+                    subprocess.check_output(myisamchk_command)
+                except subprocess.CalledProcessError as e:
+                    print(
+                        "Error while repairing MyISAM table file: {}".format(e.output)
+                    )
+                    print("Stopping the process")
+                    raise Exception from e
 
     # private methods
     def get_target_db(self) -> peewee.MySQLDatabase:
