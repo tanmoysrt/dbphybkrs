@@ -48,6 +48,7 @@ class DatabaseExporter:
     def process(self):
         self._gather_required_info()
         self._prepare_databases_for_disk_snapshot()
+        self._ensure_files_are_flushed_to_disk()
         self._validate_exportable_files()
 
         data = {}
@@ -170,6 +171,19 @@ class DatabaseExporter:
         Anyway, if the db connection gets closed or db thread dies,
         the tables will be unlocked automatically
         """
+
+    def _ensure_files_are_flushed_to_disk(self):
+        """
+        It's important to flush all the disk buffer of files to disk before snapshot.
+        This will ensure that the snapshot is consistent.
+        """
+        for db_name in self.databases:
+            files = os.listdir(self.db_directories[db_name])
+            for file in files:
+                file_path = os.path.join(self.db_directories[db_name], file)
+                with open(file_path, "r") as f:
+                    os.fsync(f.fileno())
+                    print("Synced file {}".format(file_path))
 
     def get_db(self, db_name: str) -> peewee.MySQLDatabase:
         instance = self._db_instances.get(db_name, None)

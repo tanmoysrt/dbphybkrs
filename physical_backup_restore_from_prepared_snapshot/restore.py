@@ -187,7 +187,6 @@ class DatabaseImporter:
                     print("Stopping the process")
                     raise Exception from e
 
-    # private methods
     def get_target_db(self) -> peewee.MySQLDatabase:
         if self._target_db_instance is not None:
             if not self._target_db_instance.is_connection_usable():
