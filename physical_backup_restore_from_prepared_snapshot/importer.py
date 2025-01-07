@@ -211,12 +211,12 @@ class DatabaseImporter:
 
         If any issues found, try to repair the table
         """
-        files = os.listdir(self.target_db_directory)
+        files = os.listdir(self.backup_db_directory)
         files = [file for file in files if file.endswith(".MYI")]
         for file in files:
             myisamchk_command = [
                 "myisamchk",
-                os.path.join(self.target_db_directory, file),
+                os.path.join(self.backup_db_directory, file),
             ]
             try:
                 subprocess.check_output(myisamchk_command)
@@ -233,6 +233,8 @@ class DatabaseImporter:
                     )
                     print("Stopping the process")
                     raise Exception from e
+
+        self.get_target_db_for_myisam().execute_sql("UNLOCK TABLES;")
 
     def get_target_db(self) -> peewee.MySQLDatabase:
         if self._target_db_instance is not None:
