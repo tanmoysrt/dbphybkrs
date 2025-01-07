@@ -102,17 +102,17 @@ class DatabaseImporter:
             subprocess.run(["dd", "if=" + file, "of=/dev/null", "bs=1M"], check=True)
 
     def _warmup_myisam_files(self):
-        files = os.listdir(self.target_db_directory)
+        files = os.listdir(self.backup_db_directory)
         files = [
             file for file in files if file.endswith(".MYI") or file.endswith(".MYD")
         ]
-        file_paths = [os.path.join(self.target_db_directory, file) for file in files]
+        file_paths = [os.path.join(self.backup_db_directory, file) for file in files]
         self._warmup_files(file_paths)
 
     def _warmup_innodb_files(self):
-        files = os.listdir(self.target_db_directory)
+        files = os.listdir(self.backup_db_directory)
         files = [file for file in files if file.endswith(".ibd")]
-        file_paths = [os.path.join(self.target_db_directory, file) for file in files]
+        file_paths = [os.path.join(self.backup_db_directory, file) for file in files]
         self._warmup_files(file_paths)
 
     def _prepare_target_db_for_restore(self):
